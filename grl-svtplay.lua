@@ -34,6 +34,8 @@ source = {
        tags = { 'tv', 'country:se' }
 }
 
+SVTPLAY_PROGRAM_URL = 'http://www.svtplay.se/program'
+
 ------------------
 -- Source utils --
 ------------------
@@ -42,7 +44,26 @@ function grl_source_browse(media_id)
   if grl.get_options("skip") > 0 then
     grl.callback()
   else
-    grl.callback()
+    grl.fetch(SVTPLAY_PROGRAM_URL, "svtplay_fetch_cb")
   end
 end
 
+------------------------
+-- Callback functions --
+------------------------
+-- return all the media found
+function svtplay_fetch_cb(results)
+   if not results then
+      grl.callback()
+   end
+
+   for stream, title in results:gmatch('<a href="(.-)" class="playAlphabeticLetterLink">(.-)</a>') do
+       media = {}
+       media['type'] = 'box' 
+       media.title = title
+
+       grl.callback(media, -1)
+   end
+   
+   grl.callback()
+end
