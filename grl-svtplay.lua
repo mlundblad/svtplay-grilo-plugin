@@ -34,7 +34,8 @@ source = {
        tags = { 'tv', 'country:se' }
 }
 
-SVTPLAY_PROGRAM_URL = 'http://www.svtplay.se/program'
+SVTPLAY_BASE_URL = 'http://www.svtplay.se'
+SVTPLAY_PROGRAM_URL = SVTPLAY_BASE_URL .. '/program'
 
 ------------------
 -- Source utils --
@@ -44,7 +45,11 @@ function grl_source_browse(media_id)
   if grl.get_options("skip") > 0 then
     grl.callback()
   else
-    grl.fetch(SVTPLAY_PROGRAM_URL, "svtplay_fetch_cb")
+    if not media_id then
+       grl.fetch(SVTPLAY_PROGRAM_URL, "svtplay_fetch_programs_cb")
+    else
+       grl.fetch(SVTPLAY_BASE_URL .. media_id, "svtplay_fetch_videos_cb")
+    end
   end
 end
 
@@ -52,7 +57,7 @@ end
 -- Callback functions --
 ------------------------
 -- return all the media found
-function svtplay_fetch_cb(results)
+function svtplay_fetch_programs_cb(results)
    if not results then
       grl.callback()
    end
@@ -61,9 +66,20 @@ function svtplay_fetch_cb(results)
        media = {}
        media['type'] = 'box' 
        media.title = title
+       media.id = stream
 
        grl.callback(media, -1)
    end
    
+   grl.callback()
+end
+
+function svtplay_fetch_videos_cb(results)
+   if not results then
+     grl.callback()
+   end
+
+   -- for title in results:gmatch('<h2 class="playHeadingXL">(.-)</h2>(.-)
+
    grl.callback()
 end
