@@ -48,6 +48,7 @@ function grl_source_browse(media_id)
     if not media_id then
        grl.fetch(SVTPLAY_PROGRAM_URL, "svtplay_fetch_programs_cb")
     else
+       grl.debug("fetching id: " .. media_id)
        grl.fetch(SVTPLAY_BASE_URL .. media_id, "svtplay_fetch_videos_cb")
     end
   end
@@ -62,10 +63,10 @@ function svtplay_fetch_programs_cb(results)
       grl.callback()
    end
 
-   for stream, title in results:gmatch('<a href="(.-)" class="playAlphabeticLetterLink">(.-)</a>') do
+   for dummy, stream, title, dummy2 in results:gmatch('<li class="playListItem playJsAlphabeticTitle "(.-)<a href="(.-)" class="playAlphabeticLetterLink">(.-)</a>(.-)</li>') do
        media = {}
        media['type'] = 'box' 
-       media.title = title
+       media.title = grl.unescape(title)
        media.id = stream
 
        grl.callback(media, -1)
@@ -79,7 +80,25 @@ function svtplay_fetch_videos_cb(results)
      grl.callback()
    end
 
-   -- for title in results:gmatch('<h2 class="playHeadingXL">(.-)</h2>(.-)
+   for body in results:gmatch('<article(.-)</article>') do
+       grl.callback(parse_article(body), -1)
+   end
 
    grl.callback()
+end
+
+function parse_article(body)
+  local thumbnail = body:match('<img class="playGridThumbnail" alt="" src="(.-)"/>')
+  local title = body:match('<h1 class="playH5 playGridHeadline">(.-)</h1>')
+
+  local media = {}
+  media.thumbnail = thumbnail
+  media.type = 'video'
+  media.title = trim(title)
+
+  return media
+end
+
+function trim(s)
+  return s:find'^%s*$' and '' or s:match'^%s*(.*%S)'
 end
