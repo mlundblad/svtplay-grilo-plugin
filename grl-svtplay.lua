@@ -90,11 +90,20 @@ end
 function parse_article(body)
   local thumbnail = body:match('<img class="playGridThumbnail" alt="" src="(.-)"/>')
   local title = body:match('<h1 class="playH5 playGridHeadline">(.-)</h1>')
+  local videoId = body:match('<a href="/video/(.-)/')
+  local clipId = body:match('<a href="/klipp/(.-)/')
+
+  grl.debug(body)
 
   local media = {}
   media.thumbnail = thumbnail
   media.type = 'video'
   media.title = trim(title)
+  if videoId then
+     media.external_url = SVTPLAY_BASE_URL .. '/video/' .. videoId .. '?type=embed'
+  else
+     media.external_url = SVTPLAY_BASE_URL .. '/klipp/' .. clipId .. '?type=embed'
+  end
 
   return media
 end
