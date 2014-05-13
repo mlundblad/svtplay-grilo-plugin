@@ -36,6 +36,7 @@ source = {
 
 SVTPLAY_BASE_URL = 'http://www.svtplay.se'
 SVTPLAY_PROGRAM_URL = SVTPLAY_BASE_URL .. '/program'
+SVTPLAY_CHANNELS_URL = SVTPLAY_BASE_URL .. '/kanaler'
 
 ------------------
 -- Source utils --
@@ -44,14 +45,29 @@ SVTPLAY_PROGRAM_URL = SVTPLAY_BASE_URL .. '/program'
 function grl_source_browse(media_id)
   if grl.get_options("skip") > 0 then
     grl.callback()
-  else
-    if not media_id then
-       grl.fetch(SVTPLAY_PROGRAM_URL, "svtplay_fetch_programs_cb")
-    else
-       grl.debug("fetching id: " .. media_id)
-       grl.fetch(SVTPLAY_BASE_URL .. media_id, "svtplay_fetch_videos_cb")
-    end
   end
+    
+  if not media_id then
+     -- hard-coded top-level directories
+     svtplay_toplevel('Program')
+     svtplay_toplevel('Kanaler')
+  elseif media_id == 'Program' then
+     grl.fetch(SVTPLAY_PROGRAM_URL, "svtplay_fetch_programs_cb")      
+  elseif media_id == 'Kanaler' then
+     svtplay_channels()
+  else
+     grl.fetch(SVTPLAY_BASE_URL .. media_id, "svtplay_fetch_videos_cb")
+  end
+end
+
+-- create a top-level media container
+function svtplay_toplevel(name)
+   local media = {}
+   media.type = 'box'
+   media.title = name
+   media.id = name
+   
+   grl.callback(media, -1)
 end
 
 ------------------------
@@ -106,6 +122,26 @@ function parse_article(body)
   end
 
   return media
+end
+
+function svtplay_channels()
+  svtplay_create_channel('svt1', 'SVT1')
+  svtplay_create_channel('svt2', 'SVT2')
+  svtplay_create_channel('barnkanalen', 'Barnkanalen')
+  svtplay_create_channel('svt24', 'SVT24')
+  svtplay_create_channel('kunskapskanalen', 'Kunskapskanalen')
+end
+
+function svtplay_create_channel(name, title)
+   local media = {}
+   media.type = 'video'
+   media.thumbnail = SVTPLAY_BASE_URL .. '/public/images/channels/' ..
+     name .. '.png'
+   media.title = title
+   media.external_url = SVTPLAY_BASE_URL .. '/kanaler/' .. name ..
+     '?output=json&format=json'
+
+   grl.callback(media, -1)
 end
 
 function trim(s)
