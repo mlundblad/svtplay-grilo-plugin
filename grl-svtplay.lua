@@ -116,9 +116,11 @@ function parse_article(body)
   media.type = 'video'
   media.title = trim(title)
   if videoId then
-     media.external_url = SVTPLAY_BASE_URL .. '/video/' .. videoId .. '?type=embed'
+     media.external_url = SVTPLAY_BASE_URL .. '/video/' .. videoId ..
+       '?output=json&format=json'
   else
-     media.external_url = SVTPLAY_BASE_URL .. '/klipp/' .. clipId .. '?type=embed'
+     media.external_url = SVTPLAY_BASE_URL .. '/klipp/' .. clipId ..
+       '?output=json&format=json'
   end
 
   return media
