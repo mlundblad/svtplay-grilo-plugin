@@ -29,7 +29,7 @@ source = {
        name = "SVT Play",
        description = "A source for browsing SVT Play online TV",
        supported_keys = {"id", "thumbnail", "title", "url" },
-       icon = 'http://www.svtplay.se/public/version_9da2f27cafd6d3d45bd7c68069263eac3d4d4f66/images/svt-play-2x.png',
+       icon = 'http://www.svtplay.se/public/images/svt-play-2x.png',
        supported_media = 'video',
        tags = { 'tv', 'country:se' }
 }
