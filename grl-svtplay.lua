@@ -58,7 +58,8 @@ function grl_source_browse(media_id)
   elseif media_id == 'Kanaler' then
      svtplay_channels()
   else
-     grl.fetch(SVTPLAY_BASE_URL .. media_id, 'svtplay_fetch_videos_cb')
+     grl.debug('fetching: ' .. SVTPLAY_BASE_URL .. media_id)
+     grl.fetch(SVTPLAY_BASE_URL .. '/' .. media_id, 'svtplay_fetch_videos_cb')
   end
 end
 
@@ -81,7 +82,7 @@ function svtplay_fetch_programs_cb(results)
       grl.callback()
    end
 
-   for stream, title in results:gmatch('<a href="(.-)" class="play_alphabetic%-link">(.-)</a>') do
+   for _, _, stream, title in results:gmatch('data%-text="(.-)">(.-)<a href="/(.-)" class="play_alphabetic%-link">(.-)</a>') do
        media = {}
        media.type = 'box' 
        media.title = grl.unescape(title)
@@ -99,19 +100,26 @@ function svtplay_fetch_videos_cb(results)
    end
 
    for body in results:gmatch('<article(.-)</article>') do
-       grl.callback(parse_article(body), -1)
+      local media = parse_article(body)
+      if media then
+	 -- if the article contained parsable media
+	 grl.callback(media, -1)
+      end
    end
 
    grl.callback()
 end
 
 function parse_article(body)
-  local thumbnail = body:match('<img class="playGridThumbnail" alt="" src="(.-)"/>')
-  local title = body:match('<h1 class="playH5 playGridHeadline">(.-)</h1>')
-  local videoId = body:match('<a href="/video/(.-)/')
-  local clipId = body:match('<a href="/klipp/(.-)/')
+  local _, thumbnail = body:match('<figure(.-)src="(.-)"')
+  local title = body:match('data%-title="(.-)"')
+  local videoId = body:match('href="/video/(.-)/')
+  local clipId = body:match('href="/klipp/(.-)/')
 
-  grl.debug(body)
+  -- if there is no thumbnail, assume this is a "share" article
+  if not thumbnail then
+     return nil
+  end
 
   local media = {}
   media.thumbnail = thumbnail
@@ -120,9 +128,12 @@ function parse_article(body)
   if videoId then
      media.external_url = SVTPLAY_BASE_URL .. '/video/' .. videoId ..
        '?output=json&format=json'
-  else
+  elseif clipId then
      media.external_url = SVTPLAY_BASE_URL .. '/klipp/' .. clipId ..
        '?output=json&format=json'
+  else
+     -- if we didn't find a video or clip URI, skip
+     return nil
   end
 
   return media
