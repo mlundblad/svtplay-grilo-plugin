@@ -51,12 +51,14 @@ function grl_source_browse(media_id)
      -- hard-coded top-level directories
      svtplay_toplevel('Program')
      svtplay_toplevel('Kanaler')
+     grl.callback()
   elseif media_id == 'Program' then
-     grl.fetch(SVTPLAY_PROGRAM_URL, "svtplay_fetch_programs_cb")      
+     grl.debug('fetching programs...')
+     grl.fetch(SVTPLAY_PROGRAM_URL, 'svtplay_fetch_programs_cb')      
   elseif media_id == 'Kanaler' then
      svtplay_channels()
   else
-     grl.fetch(SVTPLAY_BASE_URL .. media_id, "svtplay_fetch_videos_cb")
+     grl.fetch(SVTPLAY_BASE_URL .. media_id, 'svtplay_fetch_videos_cb')
   end
 end
 
@@ -79,9 +81,9 @@ function svtplay_fetch_programs_cb(results)
       grl.callback()
    end
 
-   for _, stream, title,_ in results:gmatch('<li class="playListItem playJsAlphabeticTitle "(.-)<a href="(.-)" class="playAlphabeticLetterLink">(.-)</a>(.-)</li>') do
+   for stream, title in results:gmatch('<a href="(.-)" class="play_alphabetic%-link">(.-)</a>') do
        media = {}
-       media['type'] = 'box' 
+       media.type = 'box' 
        media.title = grl.unescape(title)
        media.id = stream
 
@@ -132,6 +134,7 @@ function svtplay_channels()
   svtplay_create_channel('barnkanalen', 'Barnkanalen')
   svtplay_create_channel('svt24', 'SVT24')
   svtplay_create_channel('kunskapskanalen', 'Kunskapskanalen')
+  grl.callback()
 end
 
 function svtplay_create_channel(name, title)
