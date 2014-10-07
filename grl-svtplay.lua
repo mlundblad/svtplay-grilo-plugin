@@ -115,6 +115,7 @@ function parse_article(body)
   local title = body:match('data%-title="(.-)"')
   local videoId = body:match('href="/video/(.-)/')
   local clipId = body:match('href="/klipp/(.-)/')
+  local length = body:match('data%-length="(.-)"')
 
   -- if there is no thumbnail, assume this is a "share" article
   if not thumbnail then
@@ -136,7 +137,45 @@ function parse_article(body)
      return nil
   end
 
+  if length then
+     local duration = decode_duration(length)
+     if duration then
+	media.duration = duration
+     end
+  end
+
   return media
+end
+
+-- Decode duration string values
+-- Return duration in seconds
+function decode_duration(duration)
+   local h, min, s = duration:match('(%d+) h (%d+) min (%d+) sek')
+   if h and min and s then
+      return h * 3600 + min * 60 + s
+   end
+
+   local h, min = duration:match('(%d+) h (%d+) min')
+   if h and min then
+      return h * 3600 + min * 60
+   end
+
+   local h = duration:match('(%d+) h')
+   if h then
+      return h * 3600
+   end
+
+   local min, s = duration:match('(%d+) min (%d+) sek')
+   if min and s then
+      return min * 60 + s
+   end
+
+   local min = duration:match('(%d+) min')
+   if min then
+      return min * 60
+   end
+
+   return duration:match('(%d+)')
 end
 
 function svtplay_channels()
