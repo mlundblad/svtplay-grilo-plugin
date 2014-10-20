@@ -82,7 +82,7 @@ function svtplay_fetch_programs_cb(results)
       grl.callback()
    end
 
-   for _, _, stream, title in results:gmatch('data%-text="(.-)">(.-)<a href="/(.-)" class="play_alphabetic%-link">(.-)</a>') do
+   for stream, title in results:gmatch('<a href="/(.-)" class="play_link play_link%-%-regular play_alphabetic%-link">(.-)</a>') do
        media = {}
        media.type = 'box' 
        media.title = grl.unescape(title)
